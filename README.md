@@ -1,10 +1,10 @@
 # SCARLET
-A next-generation lua script for "Word Bomb" on roblox
+A next-generation lua script for "Word Bomb" on roblox. This script should work with almost all executors, but it doesn't support mobile as of right now!
 
-# what this script currenttly supports:
+### what this script currenttly supports:
 * pretty much nothing...
 
-# what this script aims to support in the near future:
+### what this script aims to support in the near future:
 * amazing autotyping
 * best word suggestions
 * support for all gamemodes and generations
