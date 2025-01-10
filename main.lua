@@ -1,5 +1,5 @@
 -------------------------------------
-----        wordbomb-exp2        ----
+----           SCARLET           ----
 ----     made by: ripend-dev     ----
 ----          01/10/2025         ----
 -------------------------------------
@@ -16,23 +16,25 @@ local preparationRandomDelayRoof  = 1.4     -- Modifies the random roof of the p
 
 local realisticAutotyping         = false
 
-----  WORDBOMB-EXP2 SOURCE CODE  -----
+-----    SCARLET SOURCE CODE    -----
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local localPlayer = game:GetService("Players").LocalPlayer
 local virtualUser = game:GetService("VirtualUser")
 
 local wordBlacklist = {}
-
 local UserInterfaceEnabled = false
+local inProgress = false
+
+local ifn = localPlayer.PlayerGui.GameUI.Container.GameSpace.DefaultUI.GameContainer.DesktopContainer.InfoFrameContainer.InfoFrame
+local tx = ifn.TextFrame
 
 -- Allows running the script multiple times in one session without having to rejoin the server
 if getgenv().executed then
-	warn("Resetting the connection\n\n")
-	-- local screenGui = lp.PlayerGui:FindFirstChild("ScreenGui")
+    for _, v in next, localPlayer.Backpack:GetChildren() do
+        v:Destroy()
 
-	-- if screenGui then
-	-- 	screenGui:Destroy()
-	-- end
+        warn("Removed \""..v.Name.."\" from player's backpack")
+    end
 
 	if getgenv().connection then
 		getgenv().connection:Disconnect()
@@ -46,7 +48,7 @@ getgenv().executed = true
 local gamename = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
 
 local Window = Fluent:CreateWindow({
-    Title = "Scarlet | ",
+    Title = "Scarlet |",
     SubTitle = gamename,
     TabWidth = 130,
     Size = UDim2.fromOffset(490, 400),
@@ -56,8 +58,8 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Updates = Window:AddTab({ Title = "Home", Icon = "home" }),
-    Main = Window:AddTab({ Title = "Main", Icon = "play" }),
+    Updates = Window:AddTab({Title = "Home", Icon = "home"}),
+    Main = Window:AddTab({Title = "Settings", Icon = "settings"}),
 }
 
 local Side = nil
@@ -99,7 +101,6 @@ local Keybind = Tabs.Updates:AddKeybind("Keybind", {
     end,
 })
 
-
 Tabs.Updates:AddSection("Adjustments")
 
 local Dropdown = Tabs.Updates:AddDropdown("Dropdown", {
@@ -123,31 +124,111 @@ Tabs.Updates:AddButton({
     end
 })
 
+local InputWriteSpeed = Tabs.Main:AddInput("Input", {
+    Title = "Writing speed (WPM)",
+    Default = writingSpeed,
+    Placeholder = writingSpeed,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        writingSpeed = Value
+    end
+})
+
+local InputMultiplier = Tabs.Main:AddInput("Input", {
+    Title = "First multiplier",
+    Default = firstMultiplier,
+    Placeholder = firstMultiplier,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        firstMultiplier = Value
+    end
+})
+
+local InputRandomFloor = Tabs.Main:AddInput("Input", {
+    Title = "RND number floor",
+    Default = randomFloor,
+    Placeholder = randomFloor,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        randomFloor = Value
+    end
+})
+
+local InputRandomRoof = Tabs.Main:AddInput("Input", {
+    Title = "RND number roof",
+    Default = randomRoof,
+    Placeholder = randomRoof,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        randomRoof = Value
+    end
+})
+
+local InputRandomDelayFloor = Tabs.Main:AddInput("Input", {
+    Title = "RND delay floor",
+    Default = randomDelayFloor,
+    Placeholder = randomDelayFloor,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        randomDelayFloor = Value
+    end
+})
+
+local InputRandomDelayRoof = Tabs.Main:AddInput("Input", {
+    Title = "RND delay roof",
+    Default = randomDelayRoof,
+    Placeholder = randomDelayRoof,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        randomDelayRoof = Value
+    end
+})
+
+local InputPreparationRandomDelayFloor = Tabs.Main:AddInput("Input", {
+    Title = "Intermission floor",
+    Default = preparationRandomDelayFloor,
+    Placeholder = preparationRandomDelayFloor,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        preparationRandomDelayFloor = Value
+    end
+})
+
+local InputPreparationRandomDelayRoof = Tabs.Main:AddInput("Input", {
+    Title = "Intermission roof",
+    Default = preparationRandomDelayRoof,
+    Placeholder = preparationRandomDelayRoof,
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        preparationRandomDelayRoof = Value
+    end
+})
+
+local suggestedWord = Instance.new("TextLabel")
+
+suggestedWord.Parent = localPlayer.PlayerGui
+suggestedWord.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+suggestedWord.Size = UDim2.new(0.4, 0, 0.1, 0)
+suggestedWord.Position = UDim2.new(0.5, 0, 0.45, 0)
+suggestedWord.Text = "PLACEHOLDER"
+
 local player = game:GetService("Players").LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 if backpack:FindFirstChild("Ui") then
     backpack:FindFirstChild("Ui"):Destroy()
 end
 
-local tool = Instance.new("Tool")
-tool.Name = "Ui"
-tool.RequiresHandle = false
-tool.TextureId = "rbxassetid://11104447788"
-tool.Parent = backpack
-
-Open = true
-tool.Activated:Connect(function()
-    if Open then
-        Window:Minimize()
-    else
-        Window:Minimize()
-    end
-end)
-
-
 -- Autotyping with highly-customizable and realistic human-like form
 function autotype(result)
-	local typebox = lp.PlayerGui.GameUI.Container.GameSpace.DefaultUI.GameContainer.DesktopContainer.Typebar.Typebox
+	local typebox = localPlayer.PlayerGui.GameUI.Container.GameSpace.DefaultUI.GameContainer.DesktopContainer.Typebar.Typebox
 	local currentString = ""
 	local disposableArray = {}
 	local disposableCounter = 1
@@ -182,3 +263,102 @@ function autotype(result)
 
 	virtualUser:TypeKey("0x0D")
 end
+
+-- Main function that gives the script its purpose
+function handler(ifn, tx)
+	if ifn:FindFirstChild("Title").Text == "Quick! Type an English word containing:" then
+		local sequence = {}
+
+		for _, v in next, tx:GetChildren() do
+			if not v:IsA("Frame") then
+				continue
+			end
+
+			if v.Visible then
+				table.insert(sequence, {
+					letter = v.Letter.TextLabel.Text,
+					x = v.Letter.TextLabel.AbsolutePosition.X,
+				})
+			end
+		end
+
+		table.sort(sequence, function(a, b)
+			return a.x < b.x
+		end)
+
+		local letters = ""
+
+		for _, v in next, sequence do
+			letters ..= v.letter
+		end
+
+		local result = findWords(letters)
+		local a = 1
+
+		if autotyping then
+			if table.find(wordBlacklist, result[a]) then
+				warn("Blacklisted word found: " .. result[rnd] .. ". Skipping...")
+				a += 1
+			end
+
+			suggestedWord.Text = result[a]
+			autotype(result[a])
+		else
+			suggestedWord.Text = result[1]
+		end
+	else
+		suggestedWord.Text = ""
+	end
+end
+
+function create_connection(ifn, tx)
+	getgenv().connection = ifn:FindFirstChild("Title"):GetPropertyChangedSignal("Text"):Connect(function()
+		handler(ifn, tx)
+	end)
+	handler(ifn, tx)
+
+	local c = ifn:GetPropertyChangedSignal("Parent"):Connect(function()
+		if not ifn or not ifn.Parent then
+			warn("Deleting connection")
+			drop_connection()
+
+			if c then
+				c:Disconnect()
+				c = nil
+			end
+		end
+	end)
+end
+
+function drop_connection()
+	if getgenv().connection then
+		getgenv().connection:Disconnect()
+		getgenv().connection = nil
+	end
+
+	inProgress = false
+end
+
+-- Intermission between turns
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+
+		if inProgress then
+			continue
+		end
+
+		suggestedWord.Text = ""
+
+		if not localPlayer.PlayerGui.GameUI.Container.GameSpace.DefaultUI:FindFirstChild("GameContainer") then
+			continue
+		end
+
+		local ifn =
+			localPlayer.PlayerGui.GameUI.Container.GameSpace.DefaultUI.GameContainer.DesktopContainer.InfoFrameContainer.InfoFrame
+		local tx = ifn.TextFrame
+
+		create_connection(ifn, tx)
+		inProgress = true
+	end
+end)
