@@ -43,20 +43,11 @@ end
 getgenv().executed = true
 
 -- Generating the user interface of the client
-local menuTool = Instance.new("Tool")
-
-menuTool.Parent = localPlayer.Backpack
-menuTool.Name = "Menu"
-menuTool.TextureId = "rbxassetid://11104447788"
-
-local Tabs = {
-    Updates = Window:AddTab({Title = "Home", Icon = "home"}),
-    Main = Window:AddTab({Title = "Main", Icon = "play"}),
-}
+local gamename = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
 
 local Window = Fluent:CreateWindow({
-    Title = "placeholder",
-    SubTitle = "Word Bomb",
+    Title = "Scarlet | ",
+    SubTitle = gamename,
     TabWidth = 130,
     Size = UDim2.fromOffset(490, 400),
     Acrylic = true,
@@ -64,27 +55,95 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local Toggle = Tabs.Main:AddToggle("Toggle", {
-    Title = "Auto Player",
-    Description = "Automatically Hit Notes",
+local Tabs = {
+    Updates = Window:AddTab({ Title = "Home", Icon = "home" }),
+    Main = Window:AddTab({ Title = "Main", Icon = "play" }),
+}
+
+local Side = nil
+
+local Toggle = Tabs.Updates:AddToggle("Toggle", {
+    Title = "Autotyper",
+    Description = "Automatically Writes words for you",
     Default = false
 })
 
-function toggleUserInterface()
-    UserInterfaceEnabled = not UserInterfaceEnabled
+Toggle:SetValue(false)
 
-    if UserInterfaceEnabled then
-        UserScreenGui.Enabled = true
-        UserScreenGui.Visible = true
-    else
-        UserScreenGui.Enabled = false
-        UserScreenGui.Visible = false
+
+game.GuiService.MenuOpened:Connect(function()
+    if Toggle.Value then
+        _G.Toggled = true
+        Toggle:SetValue(false)
     end
+end)
+
+game.GuiService.MenuClosed:Connect(function()
+    if not Toggle.Value and _G.Toggled then
+        _G.Toggled = false
+        Toggle:SetValue(true)
+    end
+end)
+
+local Keybind = Tabs.Updates:AddKeybind("Keybind", {
+    Title = "Autotyping keybind",
+    Mode = "Toggle",
+    Default = "Insert",
+
+    Callback = function(Value)
+        if Toggle.Value then
+            Toggle:SetValue(false)
+        else
+            Toggle:SetValue(true)
+        end
+    end,
+})
+
+
+Tabs.Updates:AddSection("Adjustments")
+
+local Dropdown = Tabs.Updates:AddDropdown("Dropdown", {
+    Title = "Sorting mode",
+    Values = {"Longest", "Shortest", "Random", "Hyphened"},
+    Multi = false,
+    Default = 3,
+    Callback = function(Value)
+        _G.Mode = Value
+    end
+})
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+Window:SelectTab(1)
+
+Tabs.Updates:AddButton({
+    Title = "Run Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+
+local player = game:GetService("Players").LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+if backpack:FindFirstChild("Ui") then
+    backpack:FindFirstChild("Ui"):Destroy()
 end
 
-menuTool.Activated:Connect(function()
-    toggleUserInterface()
+local tool = Instance.new("Tool")
+tool.Name = "Ui"
+tool.RequiresHandle = false
+tool.TextureId = "rbxassetid://11104447788"
+tool.Parent = backpack
+
+Open = true
+tool.Activated:Connect(function()
+    if Open then
+        Window:Minimize()
+    else
+        Window:Minimize()
+    end
 end)
+
 
 -- Autotyping with highly-customizable and realistic human-like form
 function autotype(result)
