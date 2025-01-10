@@ -1,7 +1,7 @@
 # SCARLET
 A next-generation lua script for "Word Bomb" on roblox. This script should work with almost all executors, but it doesn't support mobile as of right now!
 
-### what this script currenttly supports:
+### what this script currently supports:
 * pretty much nothing...
 
 ### what this script aims to support in the near future:
