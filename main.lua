@@ -1,7 +1,7 @@
 -------------------------------------
 ----        wordbomb-exp2        ----
 ----     made by: ripend-dev     ----
-----          09/01/2025         ----
+----          01/10/2025         ----
 -------------------------------------
 
 -----  USER-SPECIFIC SETTINGS  ------
@@ -17,6 +17,7 @@ local preparationRandomDelayRoof  = 1.4     -- Modifies the random roof of the p
 local realisticAutotyping         = false
 
 ----  WORDBOMB-EXP2 SOURCE CODE  -----
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local localPlayer = game:GetService("Players").LocalPlayer
 local virtualUser = game:GetService("VirtualUser")
 
@@ -26,12 +27,12 @@ local UserInterfaceEnabled = false
 
 -- Allows running the script multiple times in one session without having to rejoin the server
 if getgenv().executed then
-	warn("Resetting")
-	local screenGui = lp.PlayerGui:FindFirstChild("ScreenGui")
+	warn("Resetting the connection\n\n")
+	-- local screenGui = lp.PlayerGui:FindFirstChild("ScreenGui")
 
-	if screenGui then
-		screenGui:Destroy()
-	end
+	-- if screenGui then
+	-- 	screenGui:Destroy()
+	-- end
 
 	if getgenv().connection then
 		getgenv().connection:Disconnect()
@@ -43,10 +44,31 @@ getgenv().executed = true
 
 -- Generating the user interface of the client
 local menuTool = Instance.new("Tool")
-local UserScreenGui = Instance.new("ScreenGui")
 
 menuTool.Parent = localPlayer.Backpack
 menuTool.Name = "Menu"
+menuTool.TextureId = "rbxassetid://11104447788"
+
+local Tabs = {
+    Updates = Window:AddTab({Title = "Home", Icon = "home"}),
+    Main = Window:AddTab({Title = "Main", Icon = "play"}),
+}
+
+local Window = Fluent:CreateWindow({
+    Title = "placeholder",
+    SubTitle = "Word Bomb",
+    TabWidth = 130,
+    Size = UDim2.fromOffset(490, 400),
+    Acrylic = true,
+    Theme = "Amethyst",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Toggle = Tabs.Main:AddToggle("Toggle", {
+    Title = "Auto Player",
+    Description = "Automatically Hit Notes",
+    Default = false
+})
 
 function toggleUserInterface()
     UserInterfaceEnabled = not UserInterfaceEnabled
