@@ -5,19 +5,20 @@
 -------------------------------------
 
 -----  USER-SPECIFIC SETTINGS  ------
-local writingSpeed 				  = 240 -- How fast is the autotyper going to write
-local firstMultiplier			  = 2 -- Autotyping time multiplier (bigger number == longer wait time)
-local randomFloor				  = 1 -- Numerical floor of the first randomizer (bigger number == longer wait time, cannot be bigger than roof)
-local randomRoof 				  = 60 -- Numerical roof of the first randomizer (bigger number == longer wait time)
+local writingSpeed 				  = 240  -- How fast is the autotyper going to write
+local firstMultiplier			  = 2    -- Autotyping time multiplier (bigger number == longer wait time)
+local randomFloor				  = 1    -- Numerical floor of the first randomizer (bigger number == longer wait time, cannot be bigger than roof)
+local randomRoof 				  = 60   -- Numerical roof of the first randomizer (bigger number == longer wait time)
 local randomDelayFloor			  = 0.05 -- Changes the numerical floor of the last task.wait before pressing enter (cannot be bigger than roof)
 local randomDelayRoof 			  = 0.15 -- Changes the numerical roof of the last task.wait before pressing enter (bigger number == longer wait time)
-local preparationRandomDelayFloor = 1 -- Modifies the random floor of the preparation time (before the autotyper starts writing to simulate thinking)
-local preparationRandomDelayRoof  = 1.4 -- Modifies the random roof of the preparation time (before the autotyper starts writing to simulate thinking)
+local preparationRandomDelayFloor = 1    -- Modifies the random floor of the preparation time (before the autotyper starts writing to simulate thinking)
+local preparationRandomDelayRoof  = 1.4  -- Modifies the random roof of the preparation time (before the autotyper starts writing to simulate thinking)
 
 local realisticAutotyping		  = false
 local hyphenated				  = false
 local currentSort				  = 0
 local parseAmount				  = 25000
+local suggestionsShown 			  = 5
 
 -----    SCARLET SOURCE CODE    -----
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -71,6 +72,8 @@ function findWords(letters)
 
 	return result
 end
+
+getgenv().connection = nil
 
 -- Generating the user interface of the client
 local gamename = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
@@ -188,6 +191,18 @@ local InputParseAmount = Tabs.Settings:AddInput("Input", {
 	end,
 })
 
+local UserSuggestionsShown = Tabs.Settings:AddInput("Input", {
+	Title = "Suggestions shown",
+	Description = "Avoid exceeding 20",
+	Default = suggestionsShown,
+	Placeholder = suggestionsShown,
+	Numeric = true,
+	Finished = true,
+	Callback = function(Value)
+		suggestionsShown = tonumber(Value)
+	end,
+})
+
 local InputWriteSpeed = Tabs.Main:AddInput("Input", {
 	Title = "Writing speed (WPM)",
 	Default = writingSpeed,
@@ -283,17 +298,28 @@ realisticAutotyping = false
 hyphenated = false
 
 local suggestedWord = Instance.new("TextLabel")
+local suggestions = Instance.new("TextLabel")
 local screenGui = Instance.new("ScreenGui", localPlayer.PlayerGui)
 
 suggestedWord.Parent = localPlayer.PlayerGui.ScreenGui
 suggestedWord.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
 suggestedWord.Size = UDim2.new(0.4, 0, 0.1, 0)
-suggestedWord.Position = UDim2.new(0.22, 0, 0.65, 0)
+suggestedWord.Position = UDim2.new(0.225, 0, 0.65, 0)
 suggestedWord.Text = ""
 suggestedWord.BackgroundTransparency = 1
 suggestedWord.TextSize = 32
-suggestedWord.TextColor3 = Color3.new(1, 1, 1)
+suggestedWord.TextColor3 = Color3.new(1, 1, 0)
 suggestedWord.Name = "suggestedWord"
+
+suggestions.Parent = localPlayer.PlayerGui.ScreenGui
+suggestions.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Heavy, Enum.FontStyle.Normal)
+suggestions.Size = UDim2.new(0.4, 0, 0.1, 0)
+suggestions.Position = UDim2.new(0.225, 0, 0.75, 0)
+suggestions.Text = ""
+suggestions.BackgroundTransparency = 1
+suggestions.TextSize = 18
+suggestions.TextColor3 = Color3.new(1, 1, 1)
+suggestions.Name = "suggestions"
 
 local player = game:GetService("Players").LocalPlayer
 local backpack = player:WaitForChild("Backpack")
@@ -340,6 +366,10 @@ function autotype(result)
 	end
 
 	table.insert(wordBlacklist, result)
+	
+	for _, v in next, wordBlacklist do
+		print(v)
+	end
 
 	virtualUser:TypeKey("0x0D")
 end
@@ -348,8 +378,6 @@ end
 function handler(ifn, tx)
 	if ifn:FindFirstChild("Title").Text == "Quick! Type an English word containing:" then
 		local sequence = {}
-		print("type and english word")
-
 		for _, v in next, tx:GetChildren() do
 			if not v:IsA("Frame") then
 				continue
@@ -388,16 +416,26 @@ function handler(ifn, tx)
 		end
 
 		if hyphenated then
-			print("smearing")
-
 			table.sort(result, function(a, b)
 				return a:find("-") and not b:find("-")
 			end)
 		end
 
+		suggestions.Text = ""
+		local count = 0
+
+		for _, word in next, result do
+			suggestions.Text ..= word.."\n"
+			count += 1
+
+			if count >= suggestionsShown then
+				break
+			end
+		end
+
 		if autotyping then
 			if table.find(wordBlacklist, result[a]) then
-				warn("Blacklisted word found: " .. result[rnd] .. ". Skipping...")
+				warn("Blacklisted word found: " .. result[a] .. ". Skipping...")
 				a += 1
 			end
 
@@ -406,8 +444,12 @@ function handler(ifn, tx)
 		else
 			suggestedWord.Text = result[1]
 		end
+
+		table.insert(wordBlacklist, result[a])
+		a = 1
 	else
 		suggestedWord.Text = ""
+		suggestions.Text = ""
 	end
 end
 
